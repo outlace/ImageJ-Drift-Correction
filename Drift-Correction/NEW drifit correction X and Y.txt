@@ -1,0 +1,34 @@
+   requires("1.42l"); 
+   setBatchMode(true); 
+
+   //USAGE:
+   // Open image stack. Use Multi-Point tool to add two points (click once to add 1st point, shift+click to add 2nd point). 
+   // First point on slice 1 and second point on last slice.
+   // Add points on some constant region of the stack.
+   // Script will calculate difference in pixels between points as 
+   // image drifts to perform drift correction.
+   // Once both points are added, install and run macro script.
+
+   getSelectionCoordinates(xCoordinates, yCoordinates); 
+   pt1x = xCoordinates[0]; pt1y = yCoordinates[0];
+   pt2x = xCoordinates[1]; pt2y = yCoordinates[1];
+   
+   xcorrect = (pt1x-pt2x);
+   ycorrect = (pt1y-pt2y);
+   //print(xcorrect); print(ycorrect);
+
+   driftx = xcorrect/nSlices; 
+   offsetx = 0; 
+   for (i=1; i<=nSlices; i++) { 
+      setSlice(i); 
+      offsetx += driftx; 
+      run("Translate...", "interpolation=Bicubic slice y=0 x="+offsetx); 
+   } 
+
+   drifty = ycorrect/nSlices; 
+   offsety = 0; 
+   for (i=1; i<=nSlices; i++) { 
+      setSlice(i); 
+      offsety += drifty; 
+      run("Translate...", "interpolation=Bicubic slice x=0 y="+offsety); 
+   } 
