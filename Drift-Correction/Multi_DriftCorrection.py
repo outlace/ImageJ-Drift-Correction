@@ -2,7 +2,7 @@
 from ij import IJ
 from ij.plugin.frame import RoiManager
 
-print "Testing 123..."
+print "'Multi Drift Correction' plugin; version 1.1; by Brandon Brown"
 
 #converts microns (or whatever the physical dist is to pixels)
 '''
@@ -24,7 +24,7 @@ proc = IJ.getProcessor() #get the image processor
 cal = imp.getCalibration();
 #print cal.pixelWidth
 #print imp.width
-nSlices = int(stack.getSize())
+totSlices = int(stack.getSize())
 #print stack.getSize()
 #print r1.getFloatPolygon().xpoints[0]  #get xpoint
 #first convert our ROIs to something more useful, a tuple containing the point (x,y) and the Z position => (x,y,z)
@@ -33,28 +33,31 @@ for i in range(0, nRois-1):
 	roi2 = rm.getRoi(i+1)
 	pt1 = (roi1.getFloatPolygon().xpoints[0],roi1.getFloatPolygon().ypoints[0],roi1.getPosition())
 	pt2 = (roi2.getFloatPolygon().xpoints[0],roi2.getFloatPolygon().ypoints[0],roi2.getPosition())
+	startSlice = pt1[2]
+	endSlice = pt2[2]
+	nSlices = (endSlice - startSlice)
 	xcorrect = (pt1[0]-pt2[0]);
    	ycorrect = (pt1[1]-pt2[1]);
    	print "Point pair: "
    	print pt1
    	print pt2
-
    	IJ.setSlice(pt1[2]) #set starting slice
 	driftx = xcorrect/nSlices; 
 	offsetx = 0;
-	startSlice = pt1[2]
-	endSlice = pt2[2]
 	print "startSlice: %s ;endSlice: %s" % (startSlice, endSlice)
-	for j in range(startSlice,endSlice): 
+	print "nSlices: %s" % (nSlices,)
+	for j in range(startSlice, totSlices+1): 
 		IJ.setSlice(j)
-		offsetx += driftx
+		if j <= endSlice:
+			offsetx += driftx
 		IJ.run("Translate...", "interpolation=Bicubic slice y=0 x="+str(offsetx)); 
 
 	drifty = ycorrect/nSlices; 
 	offsety = 0; 
-	for k in range(startSlice,endSlice):
+	for k in range(startSlice, totSlices+1):
 		IJ.setSlice(k)
-		offsety += drifty
+		if k <= endSlice:
+			offsety += drifty
 		IJ.run("Translate...", "interpolation=Bicubic slice x=0 y="+str(offsety));
 
 
